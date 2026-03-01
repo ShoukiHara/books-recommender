@@ -2,5 +2,5 @@ streamlit==1.42.0
 pandas==2.2.3
 numpy==2.2.3
 google-generativeai
-streamlit-javascript==0.8.4
+streamlit-javascript
 st-gsheets-connection
