@@ -9,7 +9,7 @@ def get_empty_books_df():
     return pd.DataFrame(columns=['book_id', 'title', 'subject'])
 
 def get_empty_reviews_df():
-    return pd.DataFrame(columns=['review_id', 'book_id', 'instructor_name', 'layer', 'rating', 'comment', 'likes'])
+    return pd.DataFrame(columns=['review_id', 'book_id', 'instructor_name', 'layer', 'rating', 'comment'])
 
 # ------------------------------------------------------------------
 # DBアクセス層 (Google Spreadsheets)
@@ -82,9 +82,8 @@ def add_review(book_id, instructor_name, layer, rating, comment):
         'book_id': book_id,
         'instructor_name': instructor_name,
         'layer': layer,
-        'rating': rating,
-        'comment': comment,
-        'likes': 0
+        'rating': int(rating),
+        'comment': str(comment)
     }])
     df = pd.concat([df, new_row], ignore_index=True)
     _save_reviews_table(df)
@@ -120,21 +119,6 @@ def delete_review(review_id):
         return True
     return False
 
-def add_like(review_id):
-    """レビューのいいね数をインクリメントする"""
-    df = get_reviews_table()
-    if df.empty: return False
-    
-    target_idx = df.index[df['review_id'].astype(str) == str(review_id)].tolist()
-    if not target_idx:
-        return False
-        
-    idx = target_idx[0]
-    current_likes = int(float(df.at[idx, 'likes'])) if pd.notna(df.at[idx, 'likes']) and str(df.at[idx, 'likes']).strip() != '' else 0
-    df.at[idx, 'likes'] = current_likes + 1
-    _save_reviews_table(df)
-    return True
-
 # ------------------------------------------------------------------
 # Retrieval Operations
 # ------------------------------------------------------------------
@@ -163,7 +147,7 @@ def get_reviews_data():
     reviews_df = get_reviews_table()
     
     if books_df.empty or reviews_df.empty:
-        return pd.DataFrame(columns=['review_id', 'book_id', 'title', 'subject', 'instructor_name', 'layer', 'rating', 'comment', 'likes'])
+        return pd.DataFrame(columns=['review_id', 'book_id', 'title', 'subject', 'instructor_name', 'layer', 'rating', 'comment'])
         
     # Convert book_id to string matching types for merge
     books_df['book_id_str'] = books_df['book_id'].astype(str)
@@ -175,8 +159,7 @@ def get_reviews_data():
     
     # layer/rating を数値型に確実に変換
     merged['layer'] = pd.to_numeric(merged['layer'], errors='coerce')
-    merged['rating'] = pd.to_numeric(merged['rating'], errors='coerce')
-    merged['likes'] = pd.to_numeric(merged['likes'], errors='coerce').fillna(0)
+    merged['rating'] = pd.to_numeric(merged['rating'], errors='coerce').fillna(3)
     
     return merged
 

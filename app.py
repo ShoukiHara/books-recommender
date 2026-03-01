@@ -261,11 +261,6 @@ def render_book_detail():
 
                 st.write(review['comment'])
 
-                # いいねボタン (シンプルに再読み込みなしで反映させるため、キーをユニーク化)
-                if st.button(f"👍 いいね ({review['likes']})", key=f"like_{review['review_id']}"):
-                    db.add_like(review['review_id'])
-                    st.rerun()
-
 # ---------------------------------------------------------
 # 講師用モード
 # ---------------------------------------------------------

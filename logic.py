@@ -138,11 +138,8 @@ def calculate_ranking(subject, layer):
             instructor_total_reviews = instructor_counts.get(instructor, 1)
             instructor_weight = np.log10(instructor_total_reviews + 10)
             
-            # いいねの重み = 1 + (likes * 0.2)
-            likes_weight = 1 + (likes * 0.2)
-            
-            # 総合重み = 講師の重み * いいねの重み
-            combined_weight = instructor_weight * likes_weight
+            # --- 最終的な重みを計算 ---
+            combined_weight = instructor_weight
             
             # (評価値 * 総合重み)
             weighted_rating_sum += rating * combined_weight
