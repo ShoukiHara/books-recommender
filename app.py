@@ -83,12 +83,11 @@ if 'diagnosis_result' not in st.session_state:
 if 'is_admin_authenticated' not in st.session_state:
     st.session_state.is_admin_authenticated = False
 
-# 環境変数などから管理者パスワードを取得（今回はハードコードで設定可能にする、またはSecrets利用を想定）
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123") # デフォルトは admin123
+# 環境変数などから管理者パスワードを取得（Streamlit Cloudでは Secrets を優先）
+ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", os.environ.get("ADMIN_PASSWORD", "admin123"))
 
-# Gemini APIキーの設定 (ここに直接APIキーを貼り付けるか、環境変数 GEMINI_API_KEY を設定してください)
-# 注意: 日本語などのマルチバイト文字を含めるとAPI接続時にエラーになるため、未設定時は空文字にします。
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBLRH_C6niZZUfLREmfsq-z00Vwdj8oZrk")
+# Gemini APIキーの設定
+GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", "AIzaSyBLRH_C6niZZUfLREmfsq-z00Vwdj8oZrk"))
 
 # 科目リスト
 SUBJECTS = ["英語", "数学", "現代文", "古文", "漢文", "物理", "化学", "生物", "日本史", "世界史", "地理", "公民"]
