@@ -247,7 +247,7 @@ def render_book_detail():
                 with col2:
                     st.markdown(f"対象: {LAYERS[review['layer']]}")
                 with col3:
-                    st.markdown(f"評価: {'⭐'*review['rating']}")
+                    st.markdown(f"評価: {'⭐'*int(review['rating'])}")
 
                 st.write(review['comment'])
 
