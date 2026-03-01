@@ -83,11 +83,19 @@ if 'diagnosis_result' not in st.session_state:
 if 'is_admin_authenticated' not in st.session_state:
     st.session_state.is_admin_authenticated = False
 
+def get_secret_val(key, default_val):
+    if key in st.secrets:
+        return st.secrets[key]
+    if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
+        if key in st.secrets["connections"]["gsheets"]:
+            return st.secrets["connections"]["gsheets"][key]
+    return os.environ.get(key, default_val)
+
 # 環境変数などから管理者パスワードを取得（Streamlit Cloudでは Secrets を優先）
-ADMIN_PASSWORD = st.secrets.get("ADMIN_PASSWORD", os.environ.get("ADMIN_PASSWORD", "admin123"))
+ADMIN_PASSWORD = get_secret_val("ADMIN_PASSWORD", "admin123")
 
 # Gemini APIキーの設定
-GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY", "AIzaSyBLRH_C6niZZUfLREmfsq-z00Vwdj8oZrk"))
+GEMINI_API_KEY = get_secret_val("GEMINI_API_KEY", "AIzaSyBLRH_C6niZZUfLREmfsq-z00Vwdj8oZrk")
 
 # 科目リスト
 SUBJECTS = ["英語", "数学", "現代文", "古文", "漢文", "物理", "化学", "生物", "日本史", "世界史", "地理", "公民"]
