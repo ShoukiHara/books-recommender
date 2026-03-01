@@ -212,7 +212,10 @@ def render_ranking(subject, layer):
             st.button("詳細を見る", key=f"btn_{book['book_id']}", on_click=go_to_detail, args=(book['book_id'],))
 
 def render_book_detail():
-    st.button("← ランキングに戻る", on_click=go_to_main)
+    if mode == "生徒用：参考書一覧":
+        st.button("← 一覧に戻る", on_click=go_to_main)
+    else:
+        st.button("← ランキングに戻る", on_click=go_to_main)
 
     book_id = st.session_state.selected_book_id
     book = db.get_book_by_id(book_id)
