@@ -312,8 +312,8 @@ def render_instructor_mode():
                 # 評価点を星の数から選択 (クリックで直感的に入力)
                 st.write("評価")
                 star_rating = st.feedback("stars")
-                # st.feedback("stars") は 0〜4 または None を返すため、1〜5に変換。未入力時はデフォルト3。
-                rating = (star_rating + 1) if star_rating is not None else 3
+                # st.feedback("stars") は 0〜4 または None を返すため、1〜5に変換。未入力時はデフォルト0。
+                rating = (star_rating + 1) if star_rating is not None else 0
 
                 comment = st.text_area("レビューコメント（具体的な使い方や特徴など）")
 
@@ -421,7 +421,7 @@ def render_admin_mode():
             st.write(f"**対象:** {target_review['title']} ({target_review['instructor_name']})")
 
             new_layer = st.selectbox("レイヤー", options=[1, 2, 3], index=[1, 2, 3].index(target_review['layer']))
-            new_rating = st.slider("評価", 1, 5, value=int(target_review['rating']))
+            new_rating = st.slider("評価", 0, 5, value=int(target_review['rating']))
             new_comment = st.text_area("コメント", value=target_review['comment'])
 
             update_btn = st.form_submit_button("更新保存")
