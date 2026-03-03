@@ -238,21 +238,24 @@ def render_book_detail():
     st.title(f"📖 {book['title']}")
     st.markdown(f"<span class='layer-badge'>{book['subject']}</span>", unsafe_allow_html=True)
 
-    # ショッピングリンク
-    links = logic.get_shopping_links(book['title'])
-    st.markdown(f"""
-    <div style="margin: 20px 0;">
-        <a href="{links['Amazon']}" target="_blank" class="shop-btn btn-amazon">🛒 Amazonで探す</a>
-        <a href="{links['Rakuten']}" target="_blank" class="shop-btn btn-rakuten">🛒 楽天市場で探す</a>
-    </div>
-    """, unsafe_allow_html=True)
+    # ショッピングリンクとレビュー投稿ボタンを横並びに配置
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        links = logic.get_shopping_links(book['title'])
+        st.markdown(f"""
+        <div style="margin: 10px 0;">
+            <a href="{links['Amazon']}" target="_blank" class="shop-btn btn-amazon">🛒 Amazonで探す</a>
+            <a href="{links['Rakuten']}" target="_blank" class="shop-btn btn-rakuten">🛒 楽天市場で探す</a>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with col2:
+        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+        st.button("📝 この参考書にコメントをする", type="primary", on_click=go_to_review_form, args=(book['book_id'], book['subject']))
 
+    st.markdown("<br>", unsafe_allow_html=True)
     reviews_df = db.get_reviews_by_book(book_id)
-
-    # レビュー投稿ボタン
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.button("📝 この参考書にコメントをする", type="primary", on_click=go_to_review_form, args=(book['book_id'], book['subject']))
-    st.markdown("<br>", unsafe_allow_html=True)
 
     # AI学習アドバイス
     st.subheader("🤖 AI学習アドバイス")
