@@ -7,7 +7,7 @@ import os
 import streamlit_javascript as st_js
 
 # --- 設定と初期化 ---
-st.set_page_config(page_title="AI参考書リコメンダー", page_icon="📚", layout="wide")
+st.set_page_config(page_title="🎓BG参考書データベース", page_icon="📚", layout="wide")
 
 # カスタムCSS
 st.markdown("""
