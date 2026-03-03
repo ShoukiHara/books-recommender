@@ -8,7 +8,6 @@ import streamlit_javascript as st_js
 
 # --- 設定と初期化 ---
 st.set_page_config(page_title="AI参考書リコメンダー", page_icon="📚", layout="wide")
-st.warning("⚠️ 現在 C:\\Projects\\books_recommender_2\\app.py を実行しています！ もしこの文字が見えているならスーパーリロードしてください。見えていない場合は別のフォルダ（books_recommender等）を実行しています。")
 
 # カスタムCSS
 st.markdown("""
