@@ -275,7 +275,8 @@ def render_book_detail():
                 with col3:
                     st.markdown(f"評価: {'⭐'*int(review['rating'])}")
 
-                st.write(review['comment'])
+                # st.write だと改行がスペースになることがあるため、改行を維持して表示
+                st.markdown(review['comment'].replace('\n', '  \n'))
 
 # ---------------------------------------------------------
 # 講師用モード
@@ -366,12 +367,12 @@ def render_instructor_mode():
                 rating = (star_rating + 1) if star_rating is not None else 0
 
                 default_comment_template = (
-                    "・使用していた時期と期間：\n"
-                    "・この参考書をやる前に使用していた参考書と接続のスムーズさ：\n"
-                    "・この参考書の後に使用していた参考書と接続のスムーズさ：\n"
-                    "・使用感："
+                    "・使用していた時期と期間：\n\n"
+                    "・この参考書をやる前に使用していた参考書と接続のスムーズさ：\n\n"
+                    "・この参考書の後に使用していた参考書と接続のスムーズさ：\n\n"
+                    "・使用感：\n"
                 )
-                comment = st.text_area("レビューコメント（具体的な使い方や特徴など）", value=default_comment_template, height=150)
+                comment = st.text_area("レビューコメント（具体的な使い方や特徴など）", value=default_comment_template, height=300)
 
                 review_submit = st.form_submit_button("レビューを投稿")
 
