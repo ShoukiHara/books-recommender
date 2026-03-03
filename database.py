@@ -22,7 +22,8 @@ def get_conn():
 
 def get_books_table():
     try:
-        df = get_conn().read(worksheet="books", ttl=0)
+        # cache for 60 seconds to avoid hitting the Google Sheets API rate limit
+        df = get_conn().read(worksheet="books", ttl=60)
         # Ensure it's not empty and all string columns meant for ids are processed correctly.
         if df.empty or 'book_id' not in df.columns:
             return get_empty_books_df()
@@ -33,7 +34,7 @@ def get_books_table():
 
 def get_reviews_table():
     try:
-        df = get_conn().read(worksheet="reviews", ttl=0)
+        df = get_conn().read(worksheet="reviews", ttl=60)
         if df.empty or 'review_id' not in df.columns:
             return get_empty_reviews_df()
         return df.dropna(how="all")
@@ -43,7 +44,7 @@ def get_reviews_table():
 
 def get_instructors_table():
     try:
-        df = get_conn().read(worksheet="instructors", ttl=0)
+        df = get_conn().read(worksheet="instructors", ttl=60)
         if df.empty or 'instructor_name' not in df.columns:
             return get_empty_instructors_df()
         return df.dropna(how="all")
@@ -53,12 +54,15 @@ def get_instructors_table():
 
 def _save_books_table(df):
     get_conn().update(worksheet="books", data=df)
+    st.cache_data.clear()
 
 def _save_reviews_table(df):
     get_conn().update(worksheet="reviews", data=df)
+    st.cache_data.clear()
 
 def _save_instructors_table(df):
     get_conn().update(worksheet="instructors", data=df)
+    st.cache_data.clear()
 
 # ------------------------------------------------------------------
 # ID採番ユーティリティ
