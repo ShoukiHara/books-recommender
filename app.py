@@ -141,7 +141,7 @@ def go_to_review_form(book_id, subject):
 def render_student_mode():
     if st.session_state.current_view == 'main':
         st.title("🎓BG参考書データベース")
-        st.write("今のあなたの学力や悩みに合わせて、最適な参考書AIが診断・推薦します。")
+        st.write("担当生徒の学力や悩みに合わせて、最適な参考書をAIが診断・推薦します。")
 
         tab1, tab2 = st.tabs(["🤖 AIに診断してもらう", "🎯 自分でレベルを指定する"])
 
@@ -149,7 +149,7 @@ def render_student_mode():
             with st.form("diagnosis_form"):
                 subject = st.selectbox("学習したい科目", SUBJECTS)
                 grade = st.selectbox("学年", ["高1", "高2", "高3", "既卒"])
-                target_univ = st.text_input("志望校", value="京都大学")
+                target_univ = st.text_input("志望校", placeholder="例：京都大学")
                 mock_score = st.text_input("現在の模試の成績 (偏差値や判定など)", placeholder="例：全統模試 英語 偏差値60")
                 current_books = st.text_area("現在使用している参考書の名前とその完成度", placeholder="例：システム英単語 1章から2章まで完璧。基礎英文解釈の技術100 1週目")
                 student_worry = st.text_area("現在の悩みや学習状況を具体的に書いてください",
