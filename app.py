@@ -98,7 +98,7 @@ ADMIN_PASSWORD = get_secret_val("ADMIN_PASSWORD", "admin123")
 GEMINI_API_KEY = get_secret_val("GEMINI_API_KEY", "AIzaSyBLRH_C6niZZUfLREmfsq-z00Vwdj8oZrk")
 
 # 科目リスト
-SUBJECTS = ["英語", "文系数学", "理系数学", "現代文", "古文", "漢文", "物理", "化学", "生物", "日本史", "世界史", "地理", "公民"]
+SUBJECTS = ["英語", "文系数学", "理系数学", "現代文", "古文", "漢文", "物理", "化学", "生物", "日本史", "世界史", "地理", "倫理・政治経済"]
 LAYERS = {
     1: "初学・高1レベル (京大志望の高1対応)",
     2: "標準・高2レベル (京大志望の高2対応)",
@@ -140,7 +140,7 @@ def go_to_review_form(book_id, subject):
 # ---------------------------------------------------------
 def render_student_mode():
     if st.session_state.current_view == 'main':
-        st.title("🎓 AI参考書リコメンダー")
+        st.title("🎓BG参考書データベース")
         st.write("今のあなたの学力や悩みに合わせて、最適な参考書AIが診断・推薦します。")
 
         tab1, tab2 = st.tabs(["🤖 AIに診断してもらう", "🎯 自分でレベルを指定する"])
