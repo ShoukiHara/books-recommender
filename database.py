@@ -144,13 +144,14 @@ def delete_review(review_id):
 # ------------------------------------------------------------------
 
 def get_instructor_names():
-    """登録されている全講師名のリストを返す（重複排除・五十音順）"""
+    """登録されている全講師名のリストを返す（登録順）"""
     df = get_instructors_table()
     if df.empty:
         return []
-    # Dropna and convert to string, then unique and sort
-    names = df['instructor_name'].dropna().astype(str).tolist()
-    return sorted(list(set([n.strip() for n in names if n.strip()])))
+    # Dropna, convert to string, remove empty strings, then get unique preserving order
+    names = df['instructor_name'].dropna().astype(str).str.strip()
+    names = names[names != ""]
+    return names.unique().tolist()
 
 def add_instructor(name):
     """新しい講師名を追加する"""
