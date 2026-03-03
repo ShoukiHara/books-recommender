@@ -108,7 +108,10 @@ LAYERS = {
 # --- サイドバー (ルーティング) ---
 st.sidebar.title("ナビゲーション")
 
-mode = st.sidebar.selectbox("モード選択", ["生徒用：リコメンド診断", "生徒用：参考書一覧", "講師用：データ入力", "管理：データベース編集"])
+if 'app_mode' not in st.session_state:
+    st.session_state.app_mode = "生徒用：リコメンド診断"
+
+mode = st.sidebar.selectbox("モード選択", ["生徒用：リコメンド診断", "生徒用：参考書一覧", "講師用：データ入力", "管理：データベース編集"], key="app_mode")
 
 # --- ビュー切り替え関数 ---
 def scroll_to_top():
@@ -122,6 +125,14 @@ def go_to_main():
 def go_to_detail(book_id):
     st.session_state.current_view = 'detail'
     st.session_state.selected_book_id = book_id
+    scroll_to_top()
+
+def go_to_review_form(book_id, subject):
+    st.session_state.app_mode = "講師用：データ入力"
+    st.session_state.instructor_action = "レビューの投稿"
+    st.session_state.review_subject = subject
+    st.session_state.preset_review_book_id = book_id
+    st.session_state.current_view = 'main'
     scroll_to_top()
 
 # ---------------------------------------------------------
@@ -238,6 +249,11 @@ def render_book_detail():
 
     reviews_df = db.get_reviews_by_book(book_id)
 
+    # レビュー投稿ボタン
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.button("📝 この参考書にコメントをする", type="primary", on_click=go_to_review_form, args=(book['book_id'], book['subject']))
+    st.markdown("<br>", unsafe_allow_html=True)
+
     # AI学習アドバイス
     st.subheader("🤖 AI学習アドバイス")
     with st.spinner("レビューからアドバイスを生成中..."):
@@ -267,10 +283,15 @@ def render_book_detail():
 def render_instructor_mode():
     st.title("👨‍🏫 講師用：データ入力画面")
 
-    tab1, tab2 = st.tabs(["参考書の登録", "レビューの投稿"])
+    if 'instructor_action' not in st.session_state:
+        st.session_state.instructor_action = "レビューの投稿"
+
+    st.write("実行したい操作を選択してください：")
+    action = st.radio("メニュー", ["レビューの投稿", "参考書の登録"], horizontal=True, key="instructor_action", label_visibility="collapsed")
+    st.markdown("---")
 
     # --- 参考書登録 ---
-    with tab1:
+    if action == "参考書の登録":
         st.subheader("新規参考書の登録")
         with st.form("add_book_form"):
             new_title = st.text_input("参考書名")
@@ -288,7 +309,7 @@ def render_instructor_mode():
                         st.warning("この参考書は既に登録されています。")
 
     # --- レビュー投稿 ---
-    with tab2:
+    elif action == "レビューの投稿":
         st.subheader("レビューの投稿")
         
         st.info(
@@ -312,8 +333,17 @@ def render_instructor_mode():
                 st.warning("現在登録されている講師がいません。まずは管理者画面から講師名を登録してください。")
                 st.stop()
                 
+            # preset_review_book_idが存在する場合は、そのインデックスをデフォルトにする
+            default_index = 0
+            if 'preset_review_book_id' in st.session_state:
+                preset_id = st.session_state.preset_review_book_id
+                keys_list = list(book_options.keys())
+                if preset_id in keys_list:
+                    default_index = keys_list.index(preset_id)
+                del st.session_state.preset_review_book_id # Clear after using it once
+
             with st.form("add_review_form"):
-                selected_book_id = st.selectbox("参考書を選択", options=list(book_options.keys()), format_func=lambda x: book_options[x])
+                selected_book_id = st.selectbox("参考書を選択", options=list(book_options.keys()), format_func=lambda x: book_options[x], index=default_index)
                 instructor_name = st.selectbox("講師を選択", options=instructor_list)
                 layer_choice = st.radio("学習者レイヤー", options=[1, 2, 3], format_func=lambda x: LAYERS[x], horizontal=True)
 
