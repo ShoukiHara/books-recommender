@@ -290,6 +290,13 @@ def render_instructor_mode():
     # --- レビュー投稿 ---
     with tab2:
         st.subheader("レビューの投稿")
+        
+        st.info("""
+        **【入力時のお願いとルール】**
+        ① **必須項目:** 「講師名」と「レビューコメント」は必ずご記入ください。
+        ② **重複防止:** 各参考書の「各レイヤー」に対する評価は、1人1回までとしてください。
+        ③ **星の評価基準:** 星0は「不適切」、星5は「最適」という評価です。特徴をはっきりさせるため、星3ばかりにせず**できるだけ極端に点数をつけて**ください。
+        """)
 
         book_subject = st.selectbox("対象科目で絞り込み", SUBJECTS, key="review_subject")
         books_df = db.get_books_by_subject(book_subject)
