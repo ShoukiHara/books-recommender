@@ -98,7 +98,7 @@ ADMIN_PASSWORD = get_secret_val("ADMIN_PASSWORD", "admin123")
 GEMINI_API_KEY = get_secret_val("GEMINI_API_KEY", "AIzaSyBLRH_C6niZZUfLREmfsq-z00Vwdj8oZrk")
 
 # 科目リスト
-SUBJECTS = ["英語", "数学", "現代文", "古文", "漢文", "物理", "化学", "生物", "日本史", "世界史", "地理", "公民"]
+SUBJECTS = ["英語", "文系数学", "理系数学", "現代文", "古文", "漢文", "物理", "化学", "生物", "日本史", "世界史", "地理", "公民"]
 LAYERS = {
     1: "初学・高1レベル (京大志望の高1対応)",
     2: "標準・高2レベル (京大志望の高2対応)",
@@ -295,18 +295,28 @@ def render_instructor_mode():
         st.subheader("新規参考書の登録")
         with st.form("add_book_form"):
             new_title = st.text_input("参考書名")
-            new_subject = st.selectbox("科目", SUBJECTS, key="book_subject")
+            # 登録用特別カテゴリとして「文理共通数学」を追加する
+            reg_subjects = ["文理共通数学"] + SUBJECTS
+            new_subject = st.selectbox("科目", reg_subjects, key="book_subject")
             book_submit = st.form_submit_button("登録する")
 
             if book_submit:
                 if not new_title:
                     st.error("参考書名を入力してください。")
                 else:
-                    res = db.add_book(new_title, new_subject)
-                    if res:
-                        st.success(f"「{new_title}」を登録しました！")
+                    if new_subject == "文理共通数学":
+                        res1 = db.add_book(new_title, "文系数学")
+                        res2 = db.add_book(new_title, "理系数学")
+                        if res1 or res2:
+                            st.success(f"「{new_title}」を文系・理系両方に登録しました！")
+                        else:
+                            st.warning("この参考書は既に両方に登録されています。")
                     else:
-                        st.warning("この参考書は既に登録されています。")
+                        res = db.add_book(new_title, new_subject)
+                        if res:
+                            st.success(f"「{new_title}」を登録しました！")
+                        else:
+                            st.warning("この参考書は既に登録されています。")
 
     # --- レビュー投稿 ---
     elif action == "レビューの投稿":
@@ -512,6 +522,19 @@ def render_admin_mode():
                 res = db.delete_review(edit_id)
                 if res:
                     st.success("削除しました！更新を反映するにはページをリロードしてください。")
+
+    st.divider()
+
+    st.subheader("🛠️ データ移行ツール")
+    st.write("「数学」として登録されていた古いデータを、「文系数学」と「理系数学」に分割してコピーします。（1度だけ実行してください）")
+    if st.button("「数学」データを移行する", type="primary"):
+        with st.spinner("移行処理中..."):
+            count = db.migrate_math_data()
+            if count > 0:
+                st.success(f"移行完了！ {count}件の「数学」参考書（およびそのレビュー）を分割・複製しました。")
+                st.rerun()
+            else:
+                st.info("移行対象の「数学」データは見つかりませんでした。")
 
 # --- メイン実行処理 ---
 if mode == "生徒用：リコメンド診断":
