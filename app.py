@@ -293,7 +293,7 @@ def render_instructor_mode():
         
         st.info(
             "**【入力時のお願いとルール】**\n\n"
-            "- ① **必須項目:** 「講師名」と「レビューコメント」は必ずご記入ください。\n"
+            "- ① **必須項目:** 「講師名」と「レビューコメント」は必ずご記入ください。講師名を書くのが憚られる場合は「匿名」でも構いません。\n"
             "- ② **重複防止:** 各参考書の「各レイヤー」に対する評価は、1人1回までとしてください。\n"
             "- ③ **星の評価基準:** 星0は「不適切」、星5は「最適」という評価です。特徴をはっきりさせるため、星3ばかりにせず**できるだけ極端に点数をつけて**ください。\n"
             "- ④ **詳細な入力:** ご自身が使用していた参考書をレビューする場合は、使用していた時期、期間、感想をコメントしてくれると助かります！（AIが自動であなたのコメントを反映して参考書サマリーを作成します）"
@@ -307,9 +307,14 @@ def render_instructor_mode():
         else:
             book_options = {row['book_id']: row['title'] for _, row in books_df.iterrows()}
 
+            instructor_list = db.get_instructor_names()
+            if not instructor_list:
+                st.warning("現在登録されている講師がいません。まずは管理者画面から講師名を登録してください。")
+                st.stop()
+                
             with st.form("add_review_form"):
                 selected_book_id = st.selectbox("参考書を選択", options=list(book_options.keys()), format_func=lambda x: book_options[x])
-                instructor_name = st.text_input("あなたの名前（講師名）")
+                instructor_name = st.selectbox("講師を選択", options=instructor_list)
                 layer_choice = st.radio("学習者レイヤー", options=[1, 2, 3], format_func=lambda x: LAYERS[x], horizontal=True)
 
                 # 評価点を星の数から選択 (クリックで直感的に入力)
@@ -409,7 +414,45 @@ def render_admin_mode():
 
     st.divider()
 
-    st.subheader("データの編集・削除")
+    st.subheader("講師マスタの管理")
+    instructors = db.get_instructor_names()
+    
+    col_inst1, col_inst2 = st.columns(2)
+    with col_inst1:
+        st.write("**登録済み講師一覧**")
+        if instructors:
+            st.write(", ".join(instructors))
+        else:
+            st.write("登録されている講師はいません。")
+            
+        with st.expander("新規講師の追加"):
+            new_inst_name = st.text_input("追加する講師名")
+            if st.button("講師を追加"):
+                if new_inst_name:
+                    if db.add_instructor(new_inst_name):
+                        st.success(f"「{new_inst_name}」を追加しました。")
+                        st.rerun()
+                    else:
+                        st.error("すでに追加されているか、追加エラーです。")
+                else:
+                    st.error("講師名を入力してください。")
+                    
+    with col_inst2:
+        with st.expander("講師の削除"):
+            if instructors:
+                del_inst_name = st.selectbox("削除する講師を選択", options=instructors)
+                if st.button("講師を削除", type="primary"):
+                    if db.delete_instructor(del_inst_name):
+                        st.success(f"「{del_inst_name}」を削除しました。")
+                        st.rerun()
+                    else:
+                        st.error("削除に失敗しました。")
+            else:
+                st.info("削除可能な講師がいません。")
+
+    st.divider()
+
+    st.subheader("レビューの編集・削除")
 
     review_ids = reviews_df['review_id'].tolist()
 

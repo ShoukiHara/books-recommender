@@ -11,6 +11,9 @@ def get_empty_books_df():
 def get_empty_reviews_df():
     return pd.DataFrame(columns=['review_id', 'book_id', 'instructor_name', 'layer', 'rating', 'comment'])
 
+def get_empty_instructors_df():
+    return pd.DataFrame(columns=['instructor_name'])
+
 # ------------------------------------------------------------------
 # DBアクセス層 (Google Spreadsheets)
 # ------------------------------------------------------------------
@@ -43,6 +46,9 @@ def _save_books_table(df):
 
 def _save_reviews_table(df):
     get_conn().update(worksheet="reviews", data=df)
+
+def _save_instructors_table(df):
+    get_conn().update(worksheet="instructors", data=df)
 
 # ------------------------------------------------------------------
 # ID採番ユーティリティ
@@ -118,6 +124,51 @@ def delete_review(review_id):
         _save_reviews_table(df)
         return True
     return False
+
+# ------------------------------------------------------------------
+# Instructor Operations
+# ------------------------------------------------------------------
+
+def get_instructor_names():
+    """登録されている全講師名のリストを返す（重複排除・五十音順）"""
+    df = get_instructors_table()
+    if df.empty:
+        return []
+    # Dropna and convert to string, then unique and sort
+    names = df['instructor_name'].dropna().astype(str).tolist()
+    return sorted(list(set([n.strip() for n in names if n.strip()])))
+
+def add_instructor(name):
+    """新しい講師名を追加する"""
+    if not name or str(name).strip() == "":
+        return False
+    name = str(name).strip()
+    
+    df = get_instructors_table()
+    if not df.empty and name in df['instructor_name'].values:
+        return False # 既に登録済み
+        
+    new_row = pd.DataFrame([{'instructor_name': name}])
+    df = pd.concat([df, new_row], ignore_index=True)
+    _save_instructors_table(df)
+    return True
+
+def delete_instructor(name):
+    """指定した講師名を削除する"""
+    if not name or str(name).strip() == "":
+        return False
+        
+    df = get_instructors_table()
+    if df.empty:
+        return False
+        
+    if name not in df['instructor_name'].values:
+        return False
+        
+    # 指定した名前以外の行を残す
+    df = df[df['instructor_name'] != name]
+    _save_instructors_table(df)
+    return True
 
 # ------------------------------------------------------------------
 # Retrieval Operations
