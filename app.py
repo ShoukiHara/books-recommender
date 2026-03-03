@@ -295,8 +295,10 @@ def render_instructor_mode():
         st.subheader("新規参考書の登録")
         with st.form("add_book_form"):
             new_title = st.text_input("参考書名")
-            # 登録用特別カテゴリとして「文理共通数学」を追加する
-            reg_subjects = ["文理共通数学"] + SUBJECTS
+            
+            # 科目リストの一番上に「英語」、その次に数学系が来るように自然に並び替える
+            reg_subjects = ["英語", "文理共通数学", "文系数学", "理系数学", "現代文", "古文", "漢文", "物理", "化学", "生物", "日本史", "世界史", "地理", "公民"]
+            
             new_subject = st.selectbox("科目", reg_subjects, key="book_subject")
             book_submit = st.form_submit_button("登録する")
 
