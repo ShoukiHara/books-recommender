@@ -41,6 +41,16 @@ def get_reviews_table():
         st.error(f"Reviewsシートの読み込みに失敗しました: {e}\n設定ファイル(secrets.toml)とシート名を確認してください。")
         return get_empty_reviews_df()
 
+def get_instructors_table():
+    try:
+        df = get_conn().read(worksheet="instructors", ttl=0)
+        if df.empty or 'instructor_name' not in df.columns:
+            return get_empty_instructors_df()
+        return df.dropna(how="all")
+    except Exception as e:
+        st.error(f"Instructorsシートの読み込みに失敗しました: {e}\n設定ファイル(secrets.toml)とシート名を確認してください。")
+        return get_empty_instructors_df()
+
 def _save_books_table(df):
     get_conn().update(worksheet="books", data=df)
 
