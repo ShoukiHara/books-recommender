@@ -365,7 +365,13 @@ def render_instructor_mode():
                 # st.feedback("stars") は 0〜4 または None を返すため、1〜5に変換。未入力時はデフォルト0。
                 rating = (star_rating + 1) if star_rating is not None else 0
 
-                comment = st.text_area("レビューコメント（具体的な使い方や特徴など）")
+                default_comment_template = (
+                    "・使用していた時期と期間：\n"
+                    "・この参考書をやる前に使用していた参考書と接続のスムーズさ：\n"
+                    "・この参考書の後に使用していた参考書と接続のスムーズさ：\n"
+                    "・使用感："
+                )
+                comment = st.text_area("レビューコメント（具体的な使い方や特徴など）", value=default_comment_template, height=150)
 
                 review_submit = st.form_submit_button("レビューを投稿")
 
