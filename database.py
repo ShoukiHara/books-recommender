@@ -139,64 +139,6 @@ def delete_review(review_id):
         return True
     return False
 
-def migrate_math_data():
-    """「数学」として登録された全参考書とレビューを「文系数学」「理系数学」に分割コピーする移行ツール"""
-    # 意図的にキャッシュを使わず最新データを取得
-    books_df = get_conn().read(worksheet="books", ttl=0)
-    reviews_df = get_conn().read(worksheet="reviews", ttl=0)
-    
-    if books_df.empty or 'subject' not in books_df.columns:
-        return 0
-        
-    math_books = books_df[books_df['subject'] == '数学']
-    if math_books.empty:
-        return 0
-        
-    migrated_count = 0
-    new_books_rows = []
-    new_reviews_rows = []
-    
-    next_book_id = _get_next_id(books_df, 'book_id')
-    next_review_id = _get_next_id(reviews_df, 'review_id')
-    
-    for idx, math_book in math_books.iterrows():
-        old_book_id = math_book['book_id']
-        title = math_book['title']
-        
-        # 1. 元の行を「文系数学」に書き換え
-        books_df.at[idx, 'subject'] = '文系数学'
-        
-        # 2. 新たに「理系数学」としての行を追加
-        new_sci_math_id = next_book_id
-        next_book_id += 1
-        new_books_rows.append({
-            'book_id': new_sci_math_id,
-            'title': title,
-            'subject': '理系数学'
-        })
-        
-        # 3. 紐づくレビューを探して複製
-        if not reviews_df.empty and 'book_id' in reviews_df.columns:
-            book_reviews = reviews_df[reviews_df['book_id'].astype(str) == str(old_book_id)]
-            for _, review in book_reviews.iterrows():
-                new_review = review.to_dict()
-                new_review['review_id'] = next_review_id
-                new_review['book_id'] = new_sci_math_id
-                next_review_id += 1
-                new_reviews_rows.append(new_review)
-                
-        migrated_count += 1
-
-    if new_books_rows:
-        books_df = pd.concat([books_df, pd.DataFrame(new_books_rows)], ignore_index=True)
-    if new_reviews_rows:
-        reviews_df = pd.concat([reviews_df, pd.DataFrame(new_reviews_rows)], ignore_index=True)
-        
-    # 保存処理
-    _save_books_table(books_df)
-    _save_reviews_table(reviews_df)
-    
-    return migrated_count
 
 # ------------------------------------------------------------------
 # Instructor Operations

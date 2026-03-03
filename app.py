@@ -8,6 +8,7 @@ import streamlit_javascript as st_js
 
 # --- 設定と初期化 ---
 st.set_page_config(page_title="AI参考書リコメンダー", page_icon="📚", layout="wide")
+st.warning("⚠️ 現在 C:\\Projects\\books_recommender_2\\app.py を実行しています！ もしこの文字が見えているならスーパーリロードしてください。見えていない場合は別のフォルダ（books_recommender等）を実行しています。")
 
 # カスタムCSS
 st.markdown("""
@@ -392,7 +393,13 @@ def render_book_list_mode():
     st.title("📚 参考書一覧")
     st.write("登録されているすべての参考書を科目別に見ることができます。")
 
-    selected_subject = st.selectbox("科目で絞り込む", ["すべて"] + SUBJECTS)
+    col1, col2 = st.columns(2)
+    with col1:
+        selected_subject = st.selectbox("科目で絞り込む", ["すべて"] + SUBJECTS)
+    with col2:
+        st.write("") # spacing
+        st.write("") # spacing
+        only_reviewed = st.checkbox("レビューのついている参考書のみ表示")
 
     books_df = db.get_books_by_subject(selected_subject) if selected_subject != "すべて" else db.get_books_by_subject("")
     # If "" is passed, get_books_by_subject returns all books since we filter by wildcard
@@ -405,9 +412,23 @@ def render_book_list_mode():
         books_df = db.get_books_by_subject(selected_subject)
         if not books_df.empty:
             books_df = books_df.sort_values(by=['title'])
+            
     if books_df.empty:
         st.info("参考書がまだ登録されていません。")
         return
+
+    # レビューでの絞り込み処理
+    if only_reviewed:
+        reviews_df = db.get_reviews_data()
+        if reviews_df.empty:
+            books_df = pd.DataFrame() # レビューが1つもない場合は空にする
+        else:
+            reviewed_book_ids = reviews_df['book_id'].astype(str).unique()
+            books_df = books_df[books_df['book_id'].astype(str).isin(reviewed_book_ids)]
+            
+        if books_df.empty:
+            st.info("条件に一致する参考書（レビュー付き）はありません。")
+            return
 
     for subject, group in books_df.groupby('subject'):
         st.subheader(f"■ {subject}")
@@ -529,19 +550,6 @@ def render_admin_mode():
                 res = db.delete_review(edit_id)
                 if res:
                     st.success("削除しました！更新を反映するにはページをリロードしてください。")
-
-    st.divider()
-
-    st.subheader("🛠️ データ移行ツール")
-    st.write("「数学」として登録されていた古いデータを、「文系数学」と「理系数学」に分割してコピーします。（1度だけ実行してください）")
-    if st.button("「数学」データを移行する", type="primary"):
-        with st.spinner("移行処理中..."):
-            count = db.migrate_math_data()
-            if count > 0:
-                st.success(f"移行完了！ {count}件の「数学」参考書（およびそのレビュー）を分割・複製しました。")
-                st.rerun()
-            else:
-                st.info("移行対象の「数学」データは見つかりませんでした。")
 
 # --- メイン実行処理 ---
 if mode == "生徒用：リコメンド診断":
