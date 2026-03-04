@@ -461,7 +461,7 @@ def render_instructor_mode():
 
             with st.expander("📝 プレビュー (マークダウン)"):
                 if st.session_state.draft_review_comment:
-                    st.markdown(st.session_state.draft_review_comment)
+                    st.markdown(st.session_state.draft_review_comment.replace('\n', '  \n'))
                 else:
                     st.write("コメントを入力するとここにプレビューが表示されます。")
 
