@@ -128,11 +128,19 @@ def go_to_detail(book_id):
     scroll_to_top()
 
 def go_to_review_form(book_id, subject):
+    st.session_state.previous_mode = st.session_state.app_mode
     st.session_state.app_mode = "講師用：データ入力"
     st.session_state.instructor_action = "レビューの投稿"
     st.session_state.review_subject = subject
     st.session_state.preset_review_book_id = book_id
     st.session_state.current_view = 'main'
+    scroll_to_top()
+
+def return_from_review_form():
+    if 'previous_mode' in st.session_state:
+        st.session_state.app_mode = st.session_state.previous_mode
+        del st.session_state.previous_mode
+    st.session_state.current_view = 'detail'
     scroll_to_top()
 
 # ---------------------------------------------------------
@@ -323,6 +331,9 @@ def render_instructor_mode():
     elif action == "レビューの投稿":
         st.subheader("レビューの投稿")
         
+        if 'previous_mode' in st.session_state:
+            st.button("← 参考書詳細に戻る", on_click=return_from_review_form)
+
         st.info(
             "**【入力時のお願いとルール】**\n\n"
             "- ① **必須項目:** 「講師名」と「レビューコメント」は必ずご記入ください。講師名を書くのが憚られる場合は「匿名」でも構いません。\n"
@@ -380,6 +391,8 @@ def render_instructor_mode():
                     else:
                         db.add_review(selected_book_id, instructor_name, layer_choice, rating, comment)
                         st.success("レビューを投稿しました。ありがとうございます！")
+                        if 'previous_mode' in st.session_state:
+                            st.button("← 参考書詳細に戻る", type="primary", on_click=return_from_review_form)
 
 # ---------------------------------------------------------
 # 生徒用参考書一覧モード
