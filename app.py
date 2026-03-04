@@ -439,43 +439,42 @@ def render_instructor_mode():
                     default_index = keys_list.index(preset_id)
                 del st.session_state.preset_review_book_id # Clear after using it once
 
-            with st.form("add_review_form"):
-                selected_book_id = st.selectbox("参考書を選択", options=list(book_options.keys()), format_func=lambda x: book_options[x], index=default_index)
-                instructor_name = st.selectbox("講師を選択", options=instructor_list)
-                layer_choice = st.radio("学習者レイヤー", options=[1, 2, 3], format_func=lambda x: LAYERS[x], horizontal=True)
+            selected_book_id = st.selectbox("参考書を選択", options=list(book_options.keys()), format_func=lambda x: book_options[x], index=default_index)
+            instructor_name = st.selectbox("講師を選択", options=instructor_list)
+            layer_choice = st.radio("学習者レイヤー", options=[1, 2, 3], format_func=lambda x: LAYERS[x], horizontal=True)
 
-                # 評価点を星の数から選択 (クリックで直感的に入力)
-                st.write("評価")
-                star_rating = st.feedback("stars")
-                # st.feedback("stars") は 0〜4 または None を返すため、1〜5に変換。未入力時はデフォルト0。
-                rating = (star_rating + 1) if star_rating is not None else 0
+            # 評価点を星の数から選択 (クリックで直感的に入力)
+            st.write("評価")
+            star_rating = st.feedback("stars")
+            # st.feedback("stars") は 0〜4 または None を返すため、1〜5に変換。未入力時はデフォルト0。
+            rating = (star_rating + 1) if star_rating is not None else 0
 
-                default_comment_template = (
-                    "・使用していた時期と期間：\n\n"
-                    "・この参考書をやる前に使用していた参考書と接続のスムーズさ：\n\n"
-                    "・この参考書の後に使用していた参考書と接続のスムーズさ：\n\n"
-                    "・使用感：\n"
-                )
-                
-                # keyを指定することでsession_stateに自動保存され、他ページから戻った時も破棄されるまで状態を保持できる可能性が高まる
-                comment = st.text_area("レビューコメント（具体的な使い方や特徴など）", value=default_comment_template, height=300, key="draft_review_comment")
+            default_comment_template = (
+                "・使用していた時期と期間：\n\n"
+                "・この参考書をやる前に使用していた参考書と接続のスムーズさ：\n\n"
+                "・この参考書の後に使用していた参考書と接続のスムーズさ：\n\n"
+                "・使用感：\n"
+            )
+            
+            # keyを指定することでsession_stateに自動保存され、他ページから戻った時も破棄されるまで状態を保持できる可能性が高まる
+            comment = st.text_area("レビューコメント（具体的な使い方や特徴など）", value=default_comment_template, height=300, key="draft_review_comment")
 
-                with st.expander("📝 プレビュー (マークダウン)"):
-                    if st.session_state.draft_review_comment:
-                        st.markdown(st.session_state.draft_review_comment)
-                    else:
-                        st.write("コメントを入力するとここにプレビューが表示されます。")
+            with st.expander("📝 プレビュー (マークダウン)"):
+                if st.session_state.draft_review_comment:
+                    st.markdown(st.session_state.draft_review_comment)
+                else:
+                    st.write("コメントを入力するとここにプレビューが表示されます。")
 
-                review_submit = st.form_submit_button("レビューを投稿")
+            review_submit = st.button("レビューを投稿", type="primary", key="submit_review_btn")
 
-                if review_submit:
-                    if not instructor_name or not comment:
-                        st.error("講師名とコメントは必須です。")
-                    else:
-                        db.add_review(selected_book_id, instructor_name, layer_choice, rating, comment)
-                        st.success("レビューを投稿しました。ありがとうございます！")
-                        if 'previous_mode' in st.session_state:
-                            st.button("← 参考書詳細に戻る", type="primary", on_click=return_from_review_form)
+            if review_submit:
+                if not instructor_name or not comment:
+                    st.error("講師名とコメントは必須です。")
+                else:
+                    db.add_review(selected_book_id, instructor_name, layer_choice, rating, comment)
+                    st.success("レビューを投稿しました。ありがとうございます！")
+                    if 'previous_mode' in st.session_state:
+                        st.button("← 参考書詳細に戻る", type="secondary", on_click=return_from_review_form)
 
 # ---------------------------------------------------------
 # 生徒用参考書一覧モード
