@@ -183,7 +183,53 @@ def render_student_mode():
                     st.success(f"**診断結果：** {LAYERS[res['layer']]}")
                     st.info(f"**理由：** {res['reason']}")
 
-                    render_ranking(subject, res['layer'])
+                    # ランキングの計算を先に行ってダウンロード用テキストを生成する
+                    rankings = logic.calculate_ranking(subject, res['layer'])
+                    
+                    # ダウンロード用テキストの生成
+                    download_text = f"【AI参考書リコメンダー 診断結果】\n"
+                    download_text += "-" * 30 + "\n"
+                    download_text += f"対象科目: {subject}\n"
+                    download_text += f"推奨レベル: {LAYERS[res['layer']]}\n"
+                    download_text += f"診断理由: {res['reason']}\n"
+                    download_text += "-" * 30 + "\n\n"
+                    download_text += "【おすすめ参考書 TOP5】\n"
+                    
+                    if rankings:
+                        for i, book in enumerate(rankings[:5]):
+                            download_text += f"{i+1}位: {book['title']} (平均評価: {book['avg_rating']:.1f})\n"
+                    else:
+                        download_text += "該当するレベルのレビュー済み参考書がありません。\n"
+                        
+                    st.download_button(
+                        label="📄 診断結果をテキストで保存",
+                        data=download_text,
+                        file_name=f"ai_diagnosis_{subject}.txt",
+                        mime="text/plain"
+                    )
+
+                    # 実際のランキングUIを描画する
+                    st.subheader(f"🏆 {subject} - {LAYERS[res['layer']]} おすすめランキング TOP5")
+                    if not rankings:
+                         st.warning("この科目・レベルに対するレビューがまだありません。")
+                    else:
+                        for i, book in enumerate(rankings[:5]):
+                            rank_idx = i + 1
+                            rank_class = f"rank-{rank_idx}" if rank_idx <= 3 else "rank-other"
+                    
+                            st.markdown(f'''
+                            <div class="book-card">
+                                <h3><span class="rank-badge {rank_class}">{rank_idx}位</span> {book['title']}</h3>
+                                <p>
+                                    <span class="score-text">⭐ {book['score']:.2f}</span>
+                                    (平均評価: {book['avg_rating']:.1f} / レビュー数: {book['review_count']}件)
+                                </p>
+                            </div>
+                            ''', unsafe_allow_html=True)
+                    
+                            col1, col2 = st.columns([1, 4])
+                            with col1:
+                                st.button("詳細を見る", key=f"btn_{book['book_id']}", on_click=go_to_detail, args=(book['book_id'],))
 
         with tab2:
             st.write("現在の自分の学習状況から、対応するレベルを直接指定して参考書を探します。")
@@ -284,6 +330,25 @@ def render_book_detail():
                 # st.write だと改行がスペースになることがあるため、改行を維持して表示
                 st.markdown(review['comment'].replace('\n', '  \n'))
 
+    # 類似参考書の表示
+    st.markdown("---")
+    st.subheader("📚 同じ科目のその他の参考書")
+    similar_books_df = db.get_books_by_subject(book['subject'])
+    # 現在表示中の参考書を除外
+    similar_books_df = similar_books_df[similar_books_df['book_id'] != book_id]
+    
+    if similar_books_df.empty:
+        st.write("同じ科目の他の参考書はまだ登録されていません。")
+    else:
+        # 最大5件まで表示
+        for _, row in similar_books_df.head(5).iterrows():
+            with st.container(border=True):
+                col1, col2 = st.columns([4, 1])
+                with col1:
+                    st.markdown(f"**{row['title']}**")
+                with col2:
+                    st.button("詳細を見る", key=f"sim_btn_{row['book_id']}", on_click=go_to_detail, args=(row['book_id'],))
+
 # ---------------------------------------------------------
 # 講師用モード
 # ---------------------------------------------------------
@@ -299,33 +364,43 @@ def render_instructor_mode():
 
     # --- 参考書登録 ---
     if action == "参考書の登録":
-        st.subheader("新規参考書の登録")
-        with st.form("add_book_form"):
-            new_title = st.text_input("参考書名")
-            
-            # 科目リストの一番上に「英語」、その次に数学系が来るように自然に並び替える
-            reg_subjects = ["英語", "文理共通数学", "文系数学", "理系数学", "現代文", "古文", "漢文", "物理", "化学", "生物", "日本史", "世界史", "地理", "公民"]
-            
-            new_subject = st.selectbox("科目", reg_subjects, key="book_subject")
-            book_submit = st.form_submit_button("登録する")
+        # リアルタイム検索のためにフォームを使わず通常のウィジェットを使用
+        new_title = st.text_input("参考書名", key="new_book_title")
+        
+        # 重複チェック・サジェスト機能
+        if new_title:
+            all_books_df = db.get_books_table()
+            if not all_books_df.empty:
+                # 入力された文字列が含まれる参考書を検索
+                matches = all_books_df[all_books_df['title'].str.contains(new_title, na=False, case=False)]
+                if not matches.empty:
+                    st.warning("⚠️ 似た名前の参考書が既に登録されている可能性があります。")
+                    for _, row in matches.head(3).iterrows():
+                        st.write(f"- {row['title']} ({row['subject']})")
 
-            if book_submit:
-                if not new_title:
-                    st.error("参考書名を入力してください。")
-                else:
-                    if new_subject == "文理共通数学":
-                        res1 = db.add_book(new_title, "文系数学")
-                        res2 = db.add_book(new_title, "理系数学")
-                        if res1 or res2:
-                            st.success(f"「{new_title}」を文系・理系両方に登録しました！")
-                        else:
-                            st.warning("この参考書は既に両方に登録されています。")
+        # 科目リストの一番上に「英語」、その次に数学系が来るように自然に並び替える
+        reg_subjects = ["英語", "文理共通数学", "文系数学", "理系数学", "現代文", "古文", "漢文", "物理", "化学", "生物", "日本史", "世界史", "地理", "倫理・政治経済"]
+        
+        new_subject = st.selectbox("科目", reg_subjects, key="book_subject")
+        book_submit = st.button("登録する", type="primary")
+
+        if book_submit:
+            if not new_title:
+                st.error("参考書名を入力してください。")
+            else:
+                if new_subject == "文理共通数学":
+                    res1 = db.add_book(new_title, "文系数学")
+                    res2 = db.add_book(new_title, "理系数学")
+                    if res1 or res2:
+                        st.success(f"「{new_title}」を文系・理系両方に登録しました！")
                     else:
-                        res = db.add_book(new_title, new_subject)
-                        if res:
-                            st.success(f"「{new_title}」を登録しました！")
-                        else:
-                            st.warning("この参考書は既に登録されています。")
+                        st.warning("この参考書は既に両方に登録されています。")
+                else:
+                    res = db.add_book(new_title, new_subject)
+                    if res:
+                        st.success(f"「{new_title}」を登録しました！")
+                    else:
+                        st.warning("この参考書は既に登録されています。")
 
     # --- レビュー投稿 ---
     elif action == "レビューの投稿":
@@ -381,7 +456,15 @@ def render_instructor_mode():
                     "・この参考書の後に使用していた参考書と接続のスムーズさ：\n\n"
                     "・使用感：\n"
                 )
-                comment = st.text_area("レビューコメント（具体的な使い方や特徴など）", value=default_comment_template, height=300)
+                
+                # keyを指定することでsession_stateに自動保存され、他ページから戻った時も破棄されるまで状態を保持できる可能性が高まる
+                comment = st.text_area("レビューコメント（具体的な使い方や特徴など）", value=default_comment_template, height=300, key="draft_review_comment")
+
+                with st.expander("📝 プレビュー (マークダウン)"):
+                    if st.session_state.draft_review_comment:
+                        st.markdown(st.session_state.draft_review_comment)
+                    else:
+                        st.write("コメントを入力するとここにプレビューが表示されます。")
 
                 review_submit = st.form_submit_button("レビューを投稿")
 
@@ -408,9 +491,9 @@ def render_book_list_mode():
     col1, col2 = st.columns(2)
     with col1:
         selected_subject = st.selectbox("科目で絞り込む", ["すべて"] + SUBJECTS)
+        layer_filter = st.selectbox("レイヤーで絞り込む", ["すべて", "初学・高1レベル", "標準・高2レベル", "上位・高3レベル"])
     with col2:
-        st.write("") # spacing
-        st.write("") # spacing
+        sort_order = st.selectbox("並び替え", ["タイトル順", "評価が高い順", "レビューが多い順"])
         only_reviewed = st.checkbox("レビューのついている参考書のみ表示")
 
     books_df = db.get_books_by_subject(selected_subject) if selected_subject != "すべて" else db.get_books_by_subject("")
@@ -429,26 +512,60 @@ def render_book_list_mode():
         st.info("参考書がまだ登録されていません。")
         return
 
-    # レビューでの絞り込み処理
-    if only_reviewed:
-        reviews_df = db.get_reviews_data()
-        if reviews_df.empty:
-            books_df = pd.DataFrame() # レビューが1つもない場合は空にする
-        else:
-            reviewed_book_ids = reviews_df['book_id'].astype(str).unique()
-            books_df = books_df[books_df['book_id'].astype(str).isin(reviewed_book_ids)]
-            
-        if books_df.empty:
-            st.info("条件に一致する参考書（レビュー付き）はありません。")
-            return
+    # レビューデータの結合と集計（ソートやレイヤー絞り込みに必要）
+    reviews_df = db.get_reviews_data()
+    
+    if not reviews_df.empty:
+        # レイヤーフィルタリング
+        if layer_filter != "すべて":
+            layer_map = {"初学・高1レベル": 1, "標準・高2レベル": 2, "上位・高3レベル": 3}
+            target_layer = layer_map[layer_filter]
+            valid_book_ids = reviews_df[reviews_df['layer'] == target_layer]['book_id'].unique()
+            books_df = books_df[books_df['book_id'].isin(valid_book_ids)]
 
-    for subject, group in books_df.groupby('subject'):
+        # レビュー絞り込み
+        if only_reviewed:
+            reviewed_book_ids = reviews_df['book_id'].unique()
+            books_df = books_df[books_df['book_id'].isin(reviewed_book_ids)]
+
+        # 各参考書の平均評価とレビュー数を計算してマージ
+        book_stats = reviews_df.groupby('book_id').agg(
+            avg_rating=('rating', 'mean'),
+            review_count=('review_id', 'count')
+        ).reset_index()
+        books_df = pd.merge(books_df, book_stats, on='book_id', how='left')
+        books_df['avg_rating'] = books_df['avg_rating'].fillna(0)
+        books_df['review_count'] = books_df['review_count'].fillna(0)
+    else:
+        # レビューが1件もない場合
+        if layer_filter != "すべて" or only_reviewed:
+            books_df = pd.DataFrame() # 条件を満たす本は存在し得ない
+        else:
+            books_df['avg_rating'] = 0
+            books_df['review_count'] = 0
+
+    if books_df.empty:
+        st.info("条件に一致する参考書はありません。")
+        return
+
+    # 並び替え実行
+    if sort_order == "評価が高い順":
+        books_df = books_df.sort_values(by=['avg_rating', 'review_count', 'title'], ascending=[False, False, True])
+    elif sort_order == "レビューが多い順":
+        books_df = books_df.sort_values(by=['review_count', 'avg_rating', 'title'], ascending=[False, False, True])
+    else: # タイトル順
+        books_df = books_df.sort_values(by=['subject', 'title'] if selected_subject == "すべて" else ['title'])
+
+    for subject, group in books_df.groupby('subject', sort=(sort_order == "タイトル順")):
         st.subheader(f"■ {subject}")
         for _, row in group.iterrows():
             with st.container(border=True):
                 col1, col2 = st.columns([4, 1])
                 with col1:
-                    st.markdown(f"**{row['title']}**")
+                    if sort_order in ["評価が高い順", "レビューが多い順"] and 'avg_rating' in row:
+                        st.markdown(f"**{row['title']}** (⭐ {row['avg_rating']:.1f} / {int(row['review_count'])}件)")
+                    else:
+                        st.markdown(f"**{row['title']}**")
                 with col2:
                     st.button("詳細を見る", key=f"list_btn_{row['book_id']}", on_click=go_to_detail, args=(row['book_id'],))
 
