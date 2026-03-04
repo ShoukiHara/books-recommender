@@ -491,7 +491,6 @@ def render_book_list_mode():
     col1, col2 = st.columns(2)
     with col1:
         selected_subject = st.selectbox("科目で絞り込む", ["すべて"] + SUBJECTS)
-        layer_filter = st.selectbox("レイヤーで絞り込む", ["すべて", "初学・高1レベル", "標準・高2レベル", "上位・高3レベル"])
     with col2:
         sort_order = st.selectbox("並び替え", ["タイトル順", "評価が高い順", "レビューが多い順"])
         only_reviewed = st.checkbox("レビューのついている参考書のみ表示")
@@ -516,13 +515,6 @@ def render_book_list_mode():
     reviews_df = db.get_reviews_data()
     
     if not reviews_df.empty:
-        # レイヤーフィルタリング
-        if layer_filter != "すべて":
-            layer_map = {"初学・高1レベル": 1, "標準・高2レベル": 2, "上位・高3レベル": 3}
-            target_layer = layer_map[layer_filter]
-            valid_book_ids = reviews_df[reviews_df['layer'] == target_layer]['book_id'].unique()
-            books_df = books_df[books_df['book_id'].isin(valid_book_ids)]
-
         # レビュー絞り込み
         if only_reviewed:
             reviewed_book_ids = reviews_df['book_id'].unique()
@@ -538,7 +530,7 @@ def render_book_list_mode():
         books_df['review_count'] = books_df['review_count'].fillna(0)
     else:
         # レビューが1件もない場合
-        if layer_filter != "すべて" or only_reviewed:
+        if only_reviewed:
             books_df = pd.DataFrame() # 条件を満たす本は存在し得ない
         else:
             books_df['avg_rating'] = 0
