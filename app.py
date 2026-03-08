@@ -229,7 +229,7 @@ def render_student_mode():
                     
                             col1, col2 = st.columns([1, 4])
                             with col1:
-                                st.button("詳細を見る", key=f"btn_{book['book_id']}", on_click=go_to_detail, args=(book['book_id'],))
+                                st.button("詳細を見る", key=f"btn_ai_{book['book_id']}_{i}", on_click=go_to_detail, args=(book['book_id'],))
 
         with tab2:
             st.write("現在の自分の学習状況から、対応するレベルを直接指定して参考書を探します。")
@@ -274,7 +274,7 @@ def render_ranking(subject, layer):
 
         col1, col2 = st.columns([1, 4])
         with col1:
-            st.button("詳細を見る", key=f"btn_{book['book_id']}", on_click=go_to_detail, args=(book['book_id'],))
+            st.button("詳細を見る", key=f"btn_manual_{book['book_id']}_{i}", on_click=go_to_detail, args=(book['book_id'],))
 
 def render_book_detail():
     if mode == "生徒用：参考書一覧":
@@ -347,7 +347,7 @@ def render_book_detail():
                 with col1:
                     st.markdown(f"**{row['title']}**")
                 with col2:
-                    st.button("詳細を見る", key=f"sim_btn_{row['book_id']}", on_click=go_to_detail, args=(row['book_id'],))
+                    st.button("詳細を見る", key=f"sim_btn_{row['book_id']}_{_}", on_click=go_to_detail, args=(row['book_id'],))
 
 # ---------------------------------------------------------
 # 講師用モード
@@ -558,7 +558,7 @@ def render_book_list_mode():
                     else:
                         st.markdown(f"**{row['title']}**")
                 with col2:
-                    st.button("詳細を見る", key=f"list_btn_{row['book_id']}", on_click=go_to_detail, args=(row['book_id'],))
+                    st.button("詳細を見る", key=f"list_btn_{row['book_id']}_{_}", on_click=go_to_detail, args=(row['book_id'],))
 
 # ---------------------------------------------------------
 # 管理モード
