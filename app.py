@@ -313,8 +313,6 @@ def render_ranking(subject, layer):
             st.button("詳細を見る", key=f"btn_manual_{book['book_id']}_{i}", on_click=go_to_detail, args=(book['book_id'], 1))
 
 def render_book_detail():
-    st.markdown("<div id='detail-top-anchor'></div>", unsafe_allow_html=True)
-
     if mode == "生徒用：参考書一覧":
         st.button("← 一覧に戻る", on_click=go_to_main)
     else:
@@ -739,26 +737,21 @@ elif mode == "管理：データベース編集":
     render_admin_mode()
 
 import time
+import time
 import streamlit.components.v1 as components
 if st.session_state.get('scroll_trigger'):
     js_code = f"""
     <script>
-        var count = 0;
-        var interval = setInterval(function() {{
-            var anchor = window.parent.document.getElementById('detail-top-anchor');
-            if (anchor) {{
-                anchor.scrollIntoView({{behavior: 'smooth', block: 'start'}});
-            }} 
+        setTimeout(function() {{
+            var selectors = ['.main', '.stApp', '[data-testid="stAppViewContainer"]', '[data-testid="stMainBlockContainer"]'];
+            selectors.forEach(function(sel) {{
+                var el = window.parent.document.querySelector(sel);
+                if (el) {{
+                    el.scrollTop = 0;
+                }}
+            }});
             window.parent.scrollTo(0, 0);
-            
-            var mainContainer = window.parent.document.querySelector('.main') || window.parent.document.querySelector('.block-container');
-            if (mainContainer) {{
-                mainContainer.scrollTop = 0;
-            }}
-            
-            count++;
-            if(count > 50) clearInterval(interval);
-        }}, 50);
+        }}, 150);
         // {time.time()}
     </script>
     """
