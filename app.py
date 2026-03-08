@@ -122,9 +122,10 @@ def go_to_main():
     st.session_state.selected_book_id = None
     scroll_to_top()
 
-def go_to_detail(book_id):
+def go_to_detail(book_id, tab_index=0):
     st.session_state.current_view = 'detail'
     st.session_state.selected_book_id = book_id
+    st.session_state.active_tab_index = tab_index
     scroll_to_top()
 
 def go_to_review_form(book_id, subject):
@@ -151,9 +152,16 @@ def render_student_mode():
         st.title("🎓BG参考書データベース")
         st.write("担当生徒の学力や悩みに合わせて、最適な参考書をAIが診断・推薦します。")
 
-        tab1, tab2 = st.tabs(["🤖 AIに診断してもらう", "🎯 自分でレベルを指定する"])
+        if 'active_tab_index' not in st.session_state:
+            st.session_state.active_tab_index = 0
+            
+        tab_options = ["🤖 AIに診断してもらう", "🎯 自分でレベルを指定する"]
+        selected_tab = st.radio("検索モード", tab_options, index=st.session_state.active_tab_index, horizontal=True, label_visibility="collapsed")
+        
+        # Save the current selection so it stays when we interact with form
+        st.session_state.active_tab_index = tab_options.index(selected_tab)
 
-        with tab1:
+        if selected_tab == tab_options[0]:
             # Initialize state if not present
             if "diag_subject_idx" not in st.session_state: st.session_state.diag_subject_idx = 0
             if "diag_grade_idx" not in st.session_state: st.session_state.diag_grade_idx = 0
@@ -246,9 +254,9 @@ def render_student_mode():
                     
                             col1, col2 = st.columns([1, 4])
                             with col1:
-                                st.button("詳細を見る", key=f"btn_ai_{book['book_id']}_{i}", on_click=go_to_detail, args=(book['book_id'],))
+                                st.button("詳細を見る", key=f"btn_ai_{book['book_id']}_{i}", on_click=go_to_detail, args=(book['book_id'], 0))
 
-        with tab2:
+        elif selected_tab == tab_options[1]:
             st.write("現在の自分の学習状況から、対応するレベルを直接指定して参考書を探します。")
             st.info("""
             **【レイヤーの目安】**
@@ -295,7 +303,7 @@ def render_ranking(subject, layer):
 
         col1, col2 = st.columns([1, 4])
         with col1:
-            st.button("詳細を見る", key=f"btn_manual_{book['book_id']}_{i}", on_click=go_to_detail, args=(book['book_id'],))
+            st.button("詳細を見る", key=f"btn_manual_{book['book_id']}_{i}", on_click=go_to_detail, args=(book['book_id'], 1))
 
 def render_book_detail():
     if mode == "生徒用：参考書一覧":
