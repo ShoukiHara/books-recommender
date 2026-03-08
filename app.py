@@ -244,7 +244,11 @@ def render_student_mode():
             manual_layer = st.radio("現在のレイヤーを選択", options=[1, 2, 3], format_func=lambda x: LAYERS[x])
 
             if st.button("この条件で検索"):
-                render_ranking(manual_subject, manual_layer)
+                st.session_state.manual_ranking_result = {'subject': manual_subject, 'layer': manual_layer}
+
+            if 'manual_ranking_result' in st.session_state:
+                res = st.session_state.manual_ranking_result
+                render_ranking(res['subject'], res['layer'])
 
     elif st.session_state.current_view == 'detail':
         render_book_detail()
