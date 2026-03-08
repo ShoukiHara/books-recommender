@@ -742,16 +742,24 @@ import streamlit.components.v1 as components
 if st.session_state.get('scroll_trigger'):
     js_code = f"""
     <script>
-        setTimeout(function() {{
-            var selectors = ['.main', '.stApp', '[data-testid="stAppViewContainer"]', '[data-testid="stMainBlockContainer"]'];
-            selectors.forEach(function(sel) {{
-                var el = window.parent.document.querySelector(sel);
-                if (el) {{
-                    el.scrollTop = 0;
-                }}
-            }});
-            window.parent.scrollTo(0, 0);
-        }}, 150);
+        function forceTop() {{
+            var parent = window.parent;
+            parent.scrollTo(0, 0);
+            
+            var main = parent.document.querySelector('.main') || parent.document.querySelector('.block-container');
+            if (main) {{
+                main.scrollTop = 0;
+            }}
+            parent.document.documentElement.scrollTop = 0;
+            parent.document.body.scrollTop = 0;
+        }}
+        
+        // Execute immediately, and at staggered intervals to override Streamlit's scroll restoration
+        forceTop();
+        setTimeout(forceTop, 50);
+        setTimeout(forceTop, 150);
+        setTimeout(forceTop, 300);
+        
         // {time.time()}
     </script>
     """
