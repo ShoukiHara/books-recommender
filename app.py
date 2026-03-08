@@ -368,8 +368,27 @@ def render_instructor_mode():
 
     # --- 参考書登録 ---
     if action == "参考書の登録":
+        # 科目リストの一番上に「英語」、その次に数学系が来るように自然に並び替える
+        reg_subjects = ["英語", "文理共通数学", "文系数学", "理系数学", "現代文", "古文", "漢文", "物理", "化学", "生物", "日本史", "世界史", "地理", "倫理・政治経済"]
+        new_subject = st.selectbox("登録する科目", reg_subjects, key="book_subject")
+        
+        # 選択された科目の登録済み参考書を一覧表示
+        display_subject = new_subject
+        if new_subject == "文理共通数学":
+            display_subject = "文系数学" # 代表として文系数学のリストを取得
+            
+        existing_books_df = db.get_books_by_subject(display_subject)
+        with st.expander(f"📚 現在登録されている「{new_subject}」の参考書一覧", expanded=False):
+            if existing_books_df.empty:
+                st.write("まだ登録されていません。")
+            else:
+                for _, row in existing_books_df.sort_values(by="title").iterrows():
+                    st.write(f"- {row['title']}")
+
+        st.markdown("---")
+        
         # リアルタイム検索のためにフォームを使わず通常のウィジェットを使用
-        new_title = st.text_input("参考書名", key="new_book_title")
+        new_title = st.text_input("新規登録する参考書名", key="new_book_title")
         
         # 重複チェック・サジェスト機能
         if new_title:
@@ -381,11 +400,7 @@ def render_instructor_mode():
                     st.warning("⚠️ 似た名前の参考書が既に登録されている可能性があります。")
                     for _, row in matches.head(3).iterrows():
                         st.write(f"- {row['title']} ({row['subject']})")
-
-        # 科目リストの一番上に「英語」、その次に数学系が来るように自然に並び替える
-        reg_subjects = ["英語", "文理共通数学", "文系数学", "理系数学", "現代文", "古文", "漢文", "物理", "化学", "生物", "日本史", "世界史", "地理", "倫理・政治経済"]
         
-        new_subject = st.selectbox("科目", reg_subjects, key="book_subject")
         book_submit = st.button("登録する", type="primary")
 
         if book_submit:
