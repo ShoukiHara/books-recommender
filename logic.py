@@ -138,7 +138,6 @@ def calculate_ranking(subject, layer):
         for _, review in book_reviews.iterrows():
             instructor = review['instructor_name']
             rating = review['rating']
-            likes = review['likes']
             
             # 講師の重み = numpyのlog10(講師の累計レビュー数 + 10)
             instructor_total_reviews = instructor_counts.get(instructor, 1)
