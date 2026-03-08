@@ -265,8 +265,15 @@ def render_student_mode():
             - **応用・発展フェーズ:** 高い思考力が求められる実戦・過去問レベル（大阪大学以上の難関国公立大学の合格ライン）
             """)
 
-            manual_subject = st.selectbox("科目を選択", SUBJECTS, key="manual_subject")
-            manual_layer = st.radio("現在のレイヤーを選択", options=[1, 2, 3], format_func=lambda x: LAYERS[x])
+            if "manual_subject_idx" not in st.session_state: st.session_state.manual_subject_idx = 0
+            if "manual_layer_idx" not in st.session_state: st.session_state.manual_layer_idx = 0
+
+            def sync_manual_inputs():
+                st.session_state.manual_subject_idx = SUBJECTS.index(st.session_state.manual_subject)
+                st.session_state.manual_layer_idx = [1, 2, 3].index(st.session_state.manual_layer)
+
+            manual_subject = st.selectbox("科目を選択", SUBJECTS, key="manual_subject", index=st.session_state.manual_subject_idx, on_change=sync_manual_inputs)
+            manual_layer = st.radio("現在のレイヤーを選択", options=[1, 2, 3], format_func=lambda x: LAYERS[x], key="manual_layer", index=st.session_state.manual_layer_idx, on_change=sync_manual_inputs)
 
             if st.button("この条件で検索"):
                 st.session_state.manual_ranking_result = {'subject': manual_subject, 'layer': manual_layer}
