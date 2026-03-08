@@ -739,22 +739,28 @@ elif mode == "管理：データベース編集":
     render_admin_mode()
 
 import time
+import streamlit.components.v1 as components
 if st.session_state.get('scroll_trigger'):
-    import time
     js_code = f"""
+    <script>
         var count = 0;
         var interval = setInterval(function() {{
             var anchor = window.parent.document.getElementById('detail-top-anchor');
             if (anchor) {{
                 anchor.scrollIntoView({{behavior: 'smooth', block: 'start'}});
-            }} else {{
-                window.parent.scrollTo(0, 0);
+            }} 
+            window.parent.scrollTo(0, 0);
+            
+            var mainContainer = window.parent.document.querySelector('.main') || window.parent.document.querySelector('.block-container');
+            if (mainContainer) {{
+                mainContainer.scrollTop = 0;
             }}
             
             count++;
-            if(count > 10) clearInterval(interval);
+            if(count > 50) clearInterval(interval);
         }}, 50);
         // {time.time()}
+    </script>
     """
-    st_js.st_javascript(js_code)
+    components.html(js_code, height=0)
     st.session_state.scroll_trigger = False
