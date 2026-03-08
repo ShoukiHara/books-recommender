@@ -407,7 +407,7 @@ def render_instructor_mode():
         st.subheader("レビューの投稿")
         
         if 'previous_mode' in st.session_state:
-            st.button("← 参考書詳細に戻る", on_click=return_from_review_form)
+            st.button("← 参考書詳細に戻る", key="back_to_detail_top", on_click=return_from_review_form)
 
         st.info(
             "**【入力時のお願いとルール】**\n\n"
@@ -474,7 +474,7 @@ def render_instructor_mode():
                     db.add_review(selected_book_id, instructor_name, layer_choice, rating, comment)
                     st.success("レビューを投稿しました。ありがとうございます！")
                     if 'previous_mode' in st.session_state:
-                        st.button("← 参考書詳細に戻る", type="secondary", on_click=return_from_review_form)
+                        st.button("← 参考書詳細に戻る", type="secondary", key="back_to_detail_bottom", on_click=return_from_review_form)
 
 # ---------------------------------------------------------
 # 生徒用参考書一覧モード
