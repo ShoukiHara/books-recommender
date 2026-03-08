@@ -154,13 +154,31 @@ def render_student_mode():
         tab1, tab2 = st.tabs(["🤖 AIに診断してもらう", "🎯 自分でレベルを指定する"])
 
         with tab1:
-            subject = st.selectbox("学習したい科目", SUBJECTS, key="diag_subject")
-            grade = st.selectbox("学年", ["高1", "高2", "高3", "既卒"], key="diag_grade")
-            target_univ = st.text_input("志望校", placeholder="例：京都大学", key="diag_target_univ")
-            mock_score = st.text_input("現在の模試の成績 (偏差値や判定など)", placeholder="例：全統模試 英語 偏差値60", key="diag_mock_score")
-            current_books = st.text_area("現在使用している参考書の名前とその完成度", placeholder="例：システム英単語 1章から2章まで完璧。基礎英文解釈の技術100 1週目", key="diag_current_books")
-            student_worry = st.text_area("現在の悩みや学習状況を具体的に書いてください",
-                                        placeholder="例：英語の長文になると読むのが遅くなってしまう。", key="diag_student_worry")
+            # Initialize state if not present
+            if "diag_subject_idx" not in st.session_state: st.session_state.diag_subject_idx = 0
+            if "diag_grade_idx" not in st.session_state: st.session_state.diag_grade_idx = 0
+            if "diag_target_univ" not in st.session_state: st.session_state.diag_target_univ = ""
+            if "diag_mock_score" not in st.session_state: st.session_state.diag_mock_score = ""
+            if "diag_current_books" not in st.session_state: st.session_state.diag_current_books = ""
+            if "diag_student_worry" not in st.session_state: st.session_state.diag_student_worry = ""
+
+            def sync_diag_inputs():
+                st.session_state.diag_subject_idx = SUBJECTS.index(st.session_state.diag_subject)
+                st.session_state.diag_grade_idx = ["高1", "高2", "高3", "既卒"].index(st.session_state.diag_grade)
+                st.session_state.diag_target_univ = st.session_state.get('diag_target_univ_input', st.session_state.diag_target_univ)
+                st.session_state.diag_mock_score = st.session_state.get('diag_mock_score_input', st.session_state.diag_mock_score)
+                st.session_state.diag_current_books = st.session_state.get('diag_current_books_input', st.session_state.diag_current_books)
+                st.session_state.diag_student_worry = st.session_state.get('diag_student_worry_input', st.session_state.diag_student_worry)
+
+            subject = st.selectbox("学習したい科目", SUBJECTS, key="diag_subject", index=st.session_state.diag_subject_idx, on_change=sync_diag_inputs)
+            grade = st.selectbox("学年", ["高1", "高2", "高3", "既卒"], key="diag_grade", index=st.session_state.diag_grade_idx, on_change=sync_diag_inputs)
+            
+            # Text inputs automatically sync to st.session_state via key, but we need to supply value if we want strict restoration after unmounting
+            target_univ = st.text_input("志望校", value=st.session_state.diag_target_univ, placeholder="例：京都大学", key="diag_target_univ_input", on_change=sync_diag_inputs)
+            mock_score = st.text_input("現在の模試の成績 (偏差値や判定など)", value=st.session_state.diag_mock_score, placeholder="例：全統模試 英語 偏差値60", key="diag_mock_score_input", on_change=sync_diag_inputs)
+            current_books = st.text_area("現在使用している参考書の名前とその完成度", value=st.session_state.diag_current_books, placeholder="例：システム英単語 1章から2章まで完璧。基礎英文解釈の技術100 1週目", key="diag_current_books_input", on_change=sync_diag_inputs)
+            student_worry = st.text_area("現在の悩みや学習状況を具体的に書いてください", value=st.session_state.diag_student_worry,
+                                        placeholder="例：英語の長文になると読むのが遅くなってしまう。", key="diag_student_worry_input", on_change=sync_diag_inputs)
             submit_btn = st.button("診断する", type="primary")
 
             if submit_btn and student_worry:
