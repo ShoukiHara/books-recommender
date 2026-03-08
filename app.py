@@ -193,10 +193,10 @@ def render_student_mode():
                     download_text += f"推奨レベル: {LAYERS[res['layer']]}\n"
                     download_text += f"診断理由: {res['reason']}\n"
                     download_text += "-" * 30 + "\n\n"
-                    download_text += "【おすすめ参考書 TOP5】\n"
+                    download_text += "【おすすめ参考書 TOP10】\n"
                     
                     if rankings:
-                        for i, book in enumerate(rankings[:5]):
+                        for i, book in enumerate(rankings[:10]):
                             download_text += f"{i+1}位: {book['title']} (平均評価: {book['avg_rating']:.1f})\n"
                     else:
                         download_text += "該当するレベルのレビュー済み参考書がありません。\n"
@@ -209,11 +209,11 @@ def render_student_mode():
                     )
 
                     # 実際のランキングUIを描画する
-                    st.subheader(f"🏆 {subject} - {LAYERS[res['layer']]} おすすめランキング TOP5")
+                    st.subheader(f"🏆 {subject} - {LAYERS[res['layer']]} おすすめランキング TOP10")
                     if not rankings:
                          st.warning("この科目・レベルに対するレビューがまだありません。")
                     else:
-                        for i, book in enumerate(rankings[:5]):
+                        for i, book in enumerate(rankings[:10]):
                             rank_idx = i + 1
                             rank_class = f"rank-{rank_idx}" if rank_idx <= 3 else "rank-other"
                     
@@ -250,7 +250,7 @@ def render_student_mode():
         render_book_detail()
 
 def render_ranking(subject, layer):
-    st.subheader(f"🏆 {subject} - {LAYERS[layer]} おすすめランキング TOP5")
+    st.subheader(f"🏆 {subject} - {LAYERS[layer]} おすすめランキング TOP10")
 
     rankings = logic.calculate_ranking(subject, layer)
 
@@ -258,7 +258,7 @@ def render_ranking(subject, layer):
         st.warning("この科目・レベルに対するレビューがまだありません。")
         return
 
-    for i, book in enumerate(rankings[:5]):
+    for i, book in enumerate(rankings[:10]):
         rank_idx = i + 1
         rank_class = f"rank-{rank_idx}" if rank_idx <= 3 else "rank-other"
 
