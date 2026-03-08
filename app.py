@@ -741,14 +741,18 @@ import streamlit.components.v1 as components
 if st.session_state.get('scroll_trigger'):
     js_code = f"""
     <script>
-        var selectors = ['.main', '.stApp', '[data-testid="stAppViewContainer"]', '[data-testid="stMainBlockContainer"]'];
-        selectors.forEach(function(sel) {{
-            var el = window.parent.document.querySelector(sel);
-            if (el) {{
-                el.scrollTo({{top: 0, behavior: 'smooth'}});
-            }}
-        }});
-        window.parent.scrollTo({{top: 0, behavior: 'smooth'}});
+        setTimeout(function() {{
+            var selectors = ['.main', '.stApp', '[data-testid="stAppViewContainer"]', '[data-testid="stMainBlockContainer"]', '.block-container'];
+            selectors.forEach(function(sel) {{
+                var el = window.parent.document.querySelector(sel);
+                if (el) {{
+                    el.scrollTop = 0;
+                }}
+            }});
+            window.parent.scrollTo(0, 0);
+            window.parent.document.body.scrollTop = 0;
+            window.parent.document.documentElement.scrollTop = 0;
+        }}, 100);
         // {time.time()}
     </script>
     """
