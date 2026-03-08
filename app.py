@@ -741,7 +741,8 @@ import streamlit.components.v1 as components
 if st.session_state.get('scroll_trigger'):
     js_code = f"""
     <script>
-        setTimeout(function() {{
+        var count = 0;
+        var interval = setInterval(function() {{
             var selectors = ['.main', '.stApp', '[data-testid="stAppViewContainer"]', '[data-testid="stMainBlockContainer"]', '.block-container'];
             selectors.forEach(function(sel) {{
                 var el = window.parent.document.querySelector(sel);
@@ -752,7 +753,10 @@ if st.session_state.get('scroll_trigger'):
             window.parent.scrollTo(0, 0);
             window.parent.document.body.scrollTop = 0;
             window.parent.document.documentElement.scrollTop = 0;
-        }}, 100);
+            
+            count++;
+            if(count > 10) clearInterval(interval);
+        }}, 50);
         // {time.time()}
     </script>
     """
