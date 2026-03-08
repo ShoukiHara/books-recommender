@@ -739,12 +739,18 @@ elif mode == "管理：データベース編集":
 import time
 import streamlit.components.v1 as components
 if st.session_state.get('scroll_trigger'):
-    components.html(
-        f"""
-        <script>
-            window.parent.scrollTo({{top: 0, behavior: 'smooth'}}); // {time.time()}
-        </script>
-        """,
-        height=0
-    )
+    js_code = f"""
+    <script>
+        var selectors = ['.main', '.stApp', '[data-testid="stAppViewContainer"]', '[data-testid="stMainBlockContainer"]'];
+        selectors.forEach(function(sel) {{
+            var el = window.parent.document.querySelector(sel);
+            if (el) {{
+                el.scrollTo({{top: 0, behavior: 'smooth'}});
+            }}
+        }});
+        window.parent.scrollTo({{top: 0, behavior: 'smooth'}});
+        // {time.time()}
+    </script>
+    """
+    components.html(js_code, height=0)
     st.session_state.scroll_trigger = False
