@@ -9,6 +9,9 @@ import streamlit_javascript as st_js
 # --- 設定と初期化 ---
 st.set_page_config(page_title="🎓BG参考書データベース", page_icon="📚", layout="wide")
 
+# スクロール用アンカー
+st.markdown("<div id='global-top-anchor' style='position:absolute; top:0; left:0; width:1px; height:0px;'></div>", unsafe_allow_html=True)
+
 # カスタムCSS
 st.markdown("""
 <style>
@@ -743,15 +746,19 @@ if st.session_state.get('scroll_trigger'):
     js_code = f"""
     <script>
         function forceTop() {{
-            var parent = window.parent;
-            parent.scrollTo(0, 0);
-            
-            var main = parent.document.querySelector('.main') || parent.document.querySelector('.block-container');
-            if (main) {{
-                main.scrollTop = 0;
+            var anchor = window.parent.document.getElementById('global-top-anchor');
+            if (anchor) {{
+                anchor.scrollIntoView({{behavior: 'instant', block: 'start'}});
+            }} else {{
+                var parent = window.parent;
+                parent.scrollTo(0, 0);
+                var main = parent.document.querySelector('.main') || parent.document.querySelector('.block-container');
+                if (main) {{
+                    main.scrollTop = 0;
+                }}
+                parent.document.documentElement.scrollTop = 0;
+                parent.document.body.scrollTop = 0;
             }}
-            parent.document.documentElement.scrollTop = 0;
-            parent.document.body.scrollTop = 0;
         }}
         
         // Execute immediately, and at staggered intervals to override Streamlit's scroll restoration
