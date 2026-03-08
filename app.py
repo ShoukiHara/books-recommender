@@ -332,7 +332,11 @@ def render_book_detail():
                     st.markdown(f"評価: {'⭐'*int(review['rating'])}")
 
                 # st.write だと改行がスペースになることがあるため、改行を維持して表示
-                st.markdown(review['comment'].replace('\n', '  \n'))
+                comment_text = str(review.get('comment', ''))
+                if comment_text and comment_text.lower() != 'nan':
+                    st.markdown(comment_text.replace('\n', '  \n'))
+                else:
+                    st.write("コメントなし")
 
     # 類似参考書の表示
     st.markdown("---")
