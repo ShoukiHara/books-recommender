@@ -215,7 +215,7 @@ def render_student_mode():
                     rankings = logic.calculate_ranking(subject, res['layer'])
                     
                     # ダウンロード用テキストの生成
-                    download_text = f"【AI参考書リコメンダー 診断結果】\n"
+                    download_text = f"【BG参考書データベース 診断結果】\n"
                     download_text += "-" * 30 + "\n"
                     download_text += f"対象科目: {subject}\n"
                     download_text += f"推奨レベル: {LAYERS[res['layer']]}\n"
